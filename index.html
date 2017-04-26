@@ -10,6 +10,7 @@
 	<link rel="stylesheet" href="css/index.css">
 	<link rel="shortcut icon" href="images/favicon.ico" />
 	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/md5.js"></script>
 </head>
 <body>
 	<div class="g-hd">
@@ -126,7 +127,20 @@
 	</div>
 	<script type="text/javascript" src="js/index.js"></script>
 	<script type="text/javascript">
-		var a = new Follow();
+		var follow = new Follow();
+		var slider = new Slider({
+			container:$('#m-slider-container'),
+
+			images:["images/banner1.jpg",
+				"images/banner2.jpg",
+				"images/banner3.jpg"],
+
+			urls:["http://open.163.com/",
+					"http://study.163.com/",
+					"http://www.icourse163.org/"],
+
+			pageindex:1
+		});
 	</script>
 </body>
 </html>
