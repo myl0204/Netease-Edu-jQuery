@@ -1,4 +1,9 @@
 // (function(){
+  function get (url,options,callback){
+    $.get(url,$.param(options),function(data){
+      callback(JSON.parse(data))
+    })
+  }
 	// 赋值属性
 	// extend({a:1}, {b:1, a:2}) -> {a:1, b:1}
 	function extend(o1, o2){
@@ -210,30 +215,25 @@
     change:function(){
       index = this.pageindex;
       index ++;
-      index >3?index=1:index=index;
-      // 遍历所有"圆点",添加基本类名
-      for(var i = 0,length=this.pageNum;i<length;i++){
-        this.pointes[i].className = "u-p";
-      }
+      index >3?index = 1:index = index;
       // 当前"圆点"添加"z-crt"类名
-      this.pointes[index-1].className += " z-crt";
+      this.pointes.removeClass('z-crt')
+                  .eq(index-1).addClass('z-crt');
+      
       // 改变src,实现轮播
-      this.slides.src = this.images[index-1];
+      this.slides.attr('src',this.images[index-1]);
       // 改变url
-      this.link.href = this.urls[index-1];
-
-      this.slides.style.cssText = "opacity:0;";
-      // 通过获取位置属性,清空浏览器对样式的缓存
-      this.slides.offsetHeight;
-      // 淡入
-      this.slides.style.cssText = "opacity:1;transition-property:opacity;transition-duration:0.5s;transition-timing-function:ease-in;"
-
-      this.pageindex = index;
+      this.link.attr('href' , this.urls[index-1]);
+      //淡入
+      if(!this.slides.is(':animated')){
+        this.slides.fadeOut(0).fadeIn(500)
+      }
+      this.pageindex = index ;
     },
     // 执行轮播,5s一次
-    // start:function(){
-    //   this.timer = setInterval(this.change.bind(this),5000)
-    // },
+    start:function(){
+      this.timer = setInterval(this.change.bind(this),5000)
+    },
     // 停止轮播
     stop:function(){
       clearInterval(this.timer);
@@ -247,29 +247,260 @@
 
       this.slides.attr('src',this.images[this.pageindex-1])
 
-      this.pointes[this.pageindex-1].className+=" z-crt";
+      this.pointes.eq(this.pageindex-1).addClass('z-crt');
       // 添加'圆点'点击事件,采用事件代理
       this.pointer.bind("click",function(e){
-        var target = e.srcElement ? e.srcElement:e.target
-        if(target.tagName=="I"){
+        if(e.target.tagName=="I"){
           this.stop();
-          this.pageindex = dataset(target).index - 1;
+          this.pageindex = e.target.dataset.index - 1;
           this.change();
           this.start();
         }
       }.bind(this));
 
       // 鼠标移入,停止轮播.
-      // this.slides.bind("mouseover",function(){
-      //   this.stop();
-      // }.bind(this));
+      this.slides.bind("mouseover",function(){
+        this.stop();
+      }.bind(this));
       // // 鼠标移出,重新开始轮播
-      // this.slides.bind("mouseout",function(){
-      //   this.start();
-      // }.bind(this));
+      this.slides.bind("mouseout",function(){
+        this.start();
+      }.bind(this));
       // 开始轮播
-      // this.start();
+      this.start();
     }
   })
+
+  // course课程模块
+  // ----
+     
+  var templateC = 
+    "<li class='u-course'>\
+      <a class='img'>\
+        <img width = '223px' height = '124px'>\
+        <div class='detail'>\
+         <div class='top f-cb'>\
+            <img class='dimg' width = '223px' height = '124px'>\
+            <div class='content'>\
+              <div class='dttl'></div>\
+              <div class='dlcount icn'></div>\
+              <div class='dprv'></div>\
+              <div class='dcategory'></div>\
+            </div>\
+          </div>\
+          <div class='descr'></div>\
+        </div>\
+      </a>\
+    <div class='ttl'></div>\
+    <div class='prv'></div>\
+    <div class='lcount icn'></div>\
+    <div class='price'></div>\
+    </li>";
+
+  function Course(options){
+
+    options = options || {};
+    // 主容器
+    this.container = $(".m-courselist");
+    // 当前页课程数
+    this.coursecount = this.container.bind(".u-course");
+    // 页码器
+    this.pager = $('.m-page')
+    // 页数,jQuery选择器不是动态的,所以这里用原生的。
+    this.pagecount = document.getElementsByClassName('pageindex')
+
+    this.msg = this.pager.find(".msg");
+
+    extend(this,options);
+
+    this._initEvent();
+
+  }
+
+
+
+  extend(Course.prototype,{
+    // 增加课程
+    addcourse:function(i){
+
+      this.container.append($(templateC));
+      this.setcourse(i);
+
+    },
+    // 设置课程样式
+    setcourse:function(i){
+      var $u_c = this.container.children().eq(i),
+          l = this.list[i];
+      $u_c.find('img').attr('src',l.middlePhotoUrl);
+      // s.querySelector(".dimg").src = l.middlePhotoUrl;
+      $u_c.find(".dttl").text(l.name)
+      $u_c.find(".dlcount").text(l.learnerCount + "人在学")
+      $u_c.find(".dprv").text("发布者:" + l.provider);
+      $u_c.find(".dcategory").text ( "分类:" + (l.categoryName?l.categoryName:"无"));
+      $u_c.find(".descr").text ( l.description)
+      $u_c.find('.ttl').text( l.name )
+      $u_c.find('.prv').text( l.provider )
+      $u_c.find('.lcount').text( l.learnerCount)
+      $u_c.find('.price').text( l.price == 0? "免费" : '￥'+ l.price)
+    },
+    // 页码点击执行函数
+    pmove:function(event){
+      event = event || window.event;
+      this.msg.text('');
+      if(event.target.tagName == "LI"){
+        var index = event.target.dataset.index,
+            pageNo = data.pageNo;
+
+        // -1为上一页,0为下一页
+        switch(index){
+          case -1:
+            if(pageNo>1){
+              data.pageNo = data.pageNo - 1;
+              get(url,data,function(obj){
+                course = new Course(obj)
+              })
+            }else{
+              this.msg.text("已经是第一页啦,别浪费力气了~")
+            }
+          
+          break;
+          case 0:
+            // 这里不用totalPage的原因是'this'会一直指向页面第一次加载时new出来的Course
+            // 如果是大屏,那么this.totalPage就是3,会造成变成小屏后点击下一页无法到达第四页的情况
+            // 改用ele.onlick注册事件,解决
+            // 引申出的问题--> [我重复进行course = new Course的做法,是不是很不好?]
+            if(pageNo<this.totalPage){
+              data.pageNo += 1;
+              get(url,data,function(obj){
+                course = new Course(obj);
+              })
+            }else{
+              this.msg.text("已经是最后页啦,别浪费力气了~")
+            }
+
+          
+          break;
+          default:
+            if(index>0 && index != pageNo){
+              data.pageNo = index;
+
+              get(url,data,function(obj){
+                course = new Course(obj);
+              })
+            }
+        }
+      }
+    },
+
+    // 初始化事件,根据现有的课程数和获取到的课程数来增删/设置课程
+    _initEvent:function(){
+      // 判断请求的页码数是否大于服务器返回的总页数.
+      // 若大于总页数,自动返回最后一页数据
+      // 经测试,'错误'的页码数还是会返回totalPage和totalCount
+      if(data.pageNo > this.totalPage){
+          data.pageNo = this.totalPage;
+          get(url,data,function(obj){
+            course = new Course(obj)
+          })
+      }else{
+        var clength = this.coursecount.length,//当前页面的课程数量
+            llength = this.list.length;//从服务器获取到的指定页面课程数量
+        if(clength == 0){
+          for(var i = 0,length=llength;i<length;i++){
+            this.addcourse(i);
+          }
+        }else if(clength == llength){
+          for(var i = 0,length=llength;i<length;i++){
+            this.setcourse(i)
+          }
+        }else if(clength>llength){
+          for(var i = 0,length=clength - llength;i<length;i++){
+            this.container.removeChild(children(this.container)[0])
+          }
+          for(var i=0,length=llength;i<length;i++){
+            this.setcourse(i)
+          }
+        }else{
+          for(var i = 0;i<clength;i++){
+            this.setcourse(i)
+          }
+          for(var i=clength;i<llength;i++){
+            this.addcourse(i);
+          }
+        }
+        // 设置页码数
+        if(this.pagecount.length == 0){ //无页码时,即第一次加载页面时
+          for(var i=0 ,length = this.totalPage;i<length;i++){
+            // 创建元素
+            var $pageindex = $('<li class=\'pageindex\'></li>');
+            // 设置类名
+            (i+1) == data.pageNo ? $pageindex.addClass('z-sel') : i=i
+
+            $pageindex.data('index',i+1);
+
+            $pageindex.text(i+1);
+
+            $pageindex.insertBefore($('.icn .right'));
+          }
+         
+          // 注册tab的点击事件,采用事件代理
+          var $coursetab = $('.u-tab');
+          $coursetab.bind("click",function(e){
+
+            if(e.target.tagName == "LI"){
+              switch(e.target.dataset.type){
+                case '10':
+                data.type = 10;
+                data.pageNo = 1;
+                break;
+
+                case '20':
+                data.type = 20;
+                data.pageNo = 1;
+                break;
+              }
+              // // 遍历所有tab,设置基本类名
+              // for(var i = 0,length = children(coursetab).length;i<length;i++){
+              //   children(coursetab)[i].className = "";
+              // }
+              // // 当前tab设置'z-sel'
+              // target.className = "z-sel"
+              $coursetab.children().toggleClass('z-sel')
+              get(url,data,function(obj){
+                course = new Course(obj)
+              })
+            }
+          })
+        }else if (this.pagecount.length < this.totalPage){ // 页面总页码数小于从服务器获取的总页码数时
+          for(var i = this.pagecount.length ; i<this.totalPage;i++){
+
+            var pageindex = document.createElement("li");
+
+            pageindex.className = "pageindex";
+
+            pageindex.setAttribute("data-index",i+1);
+
+            pageindex.innerHTML = i+1 ;
+
+            this.pager.insertBefore(pageindex,children(this.pager)[i+2]);
+          }
+        }else if(this.pagecount.length > this.totalPage){ //页面总页码数大于从服务器获取的总页码数时
+          for(var i = this.totalPage;i<this.pagecount.length;i++){
+
+            this.pager.removeChild(children(this.pager)[i+2]);
+            
+          }
+        }
+        // 对页码器进行事件代理,执行跳转
+        // addEvent(this.pager,"click",this.pmove.bind(this));
+        this.pager.onclick = this.pmove.bind(this);
+        // 设置页码状态
+        for(i=0;i<this.totalPage;i++){
+        (i+1) == data.pageNo ? this.pagecount[i].className = "pageindex z-sel" : this.pagecount[i].className = "pageindex";
+        } 
+      }      
+    }
+  })
+
   window.Follow = Follow
 // })()

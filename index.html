@@ -141,6 +141,17 @@
 
 			pageindex:1
 		});
+		var winWidth = window.innerWidth,
+	      	flag = 1,
+	      	url = "https://study.163.com/webDev/couresByCategory.htm",
+	      	data = {pageNo:1,psize:20,type:10},
+	      	hoturl = "https://study.163.com/webDev/hotcouresByCategory.htm";
+		// $.get(url,$.param(data),function(obj){
+		// 	course = new Course(obj)
+		// })
+		get(url,data,function(obj){
+			course = new Course(obj)
+		})
 	</script>
 </body>
 </html>
