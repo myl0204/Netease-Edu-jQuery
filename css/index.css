@@ -127,7 +127,7 @@ body{font: 12px "宋体";}
 .g-ft .ftrt .ours{float: left;margin-right: 70px;}
 .g-ft .ftrt .more{float: left}
 .g-ft .ftrt .icn{width: 66px;background-position: -25px -59px;}
-.j-suc{position: fixed;top: 50%;left: 50%;width: 60px;text-align: center;margin-left: -30px;color: green;background-color: #ffffff}
+.j-suc{position: fixed;top: 30%;left: 50%;width: 60px;text-align: center;margin-left: -30px;color: green;background-color: #ffffff}
 @media screen and (max-width: 1205px){
 	.g-flow{width: 960px;}
 	.g-content .m-ct{float:left;width: 273px;}
