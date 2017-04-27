@@ -71,7 +71,7 @@ body{font: 12px "宋体";}
 .vct .zttl{margin-bottom: 10px;text-align: left;font: 18px/28px "Microsoft Yahei";}
 .vct .zcls{position: absolute;top: 13px;right: 12px;width: 10px;height: 10px;cursor: pointer;}
 .vct .icn{background-position: -65px -93px;}
-.vct .u-playbtn{display:none;position: absolute;left: 50px;bottom: 79px;width: 60px;height: 60px;background: url(../images/sprit.png) 0 -116px no-repeat;cursor: pointer;}
+.vct .u-playbtn{display:block;position: absolute;left: 50px;bottom: 79px;width: 60px;height: 60px;background: url(../images/sprit.png) 0 -116px no-repeat;cursor: pointer;}
 .g-bd .g-sd .m-hotlist{margin-top: 21px;background-color: #fff;box-shadow: 1px 0px #ecebeb,-1px 0 #ecebeb}
 .g-bd .g-sd .m-hotlist .ttl{height: 56px;padding-left: 20px;font: 16px/56px "Microsoft Yahei"; box-shadow: 0 1px #eeeeee;}
 .g-bd .g-sd .m-hotlist .hot{height: 700px;padding: 20px 0 0 20px;overflow: hidden;}
