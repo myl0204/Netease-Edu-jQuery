@@ -1,4 +1,5 @@
 (function(){
+  //Ajax get函数
   function get (url,options,callback){
     $.get(url,$.param(options),function(data){
       callback(JSON.parse(data))
@@ -116,6 +117,7 @@
   extend(Login.prototype,{
 
     show:function(){
+
       this.mask.appendTo('body')
       this.container.appendTo('body')
       
@@ -257,7 +259,7 @@
       this.slides.bind("mouseover",function(){
         this.stop();
       }.bind(this));
-      // // 鼠标移出,重新开始轮播
+      // 鼠标移出,重新开始轮播
       this.slides.bind("mouseout",function(){
         this.start();
       }.bind(this));
@@ -301,7 +303,7 @@
     this.coursecount = this.container[0].getElementsByClassName('u-course')
     // 页码器
     this.pager = $('.m-page')
-    // 页数,jQuery选择器不是动态的,所以这里用原生的。
+    // 页数,jQuery选择器不是动态的,所以这里用原生
     this.pagecount = document.getElementsByClassName('pageindex')
 
     this.msg = this.pager.find(".msg");
@@ -327,7 +329,6 @@
       var $u_c = this.container.children().eq(i),
           l = this.list[i];
       $u_c.find('img').attr('src',l.middlePhotoUrl);
-      // s.querySelector(".dimg").src = l.middlePhotoUrl;
       $u_c.find(".dttl").text(l.name)
       $u_c.find(".dlcount").text(l.learnerCount + "人在学")
       $u_c.find(".dprv").text("发布者:" + l.provider);
@@ -340,9 +341,7 @@
     },
     // 页码点击执行函数
     pmove:function(event){
-      // event = event || window.event;
       this.msg.text('');
-      // if(event.target.tagName == "LI"){
         var index = $(event.target).data('index')
             pageNo = data.pageNo;
 
@@ -362,7 +361,7 @@
           case 0:
             // 这里不用totalPage的原因是'this'会一直指向页面第一次加载时new出来的Course
             // 如果是大屏,那么this.totalPage就是3,会造成变成小屏后点击下一页无法到达第四页的情况
-            // 改用ele.onlick注册事件,解决
+            // 改为每次重新注册监听
             // 引申出的问题--> [我重复进行course = new Course的做法,是不是很不好?]
             if(pageNo<this.totalPage){
               data.pageNo += 1;
@@ -391,7 +390,7 @@
     _initEvent:function(){
       // 对页码器进行事件代理,执行跳转,因为每次翻页都会重新new一个Course
       // 会重复监听注册,故先取消,这样的pmove中的this.totalPage才会指向当前的this
-      this.pager.unbind('<click></click>')
+      this.pager.unbind('click')
       this.pager.on('click','li',this.pmove.bind(this))
       // 判断请求的页码数是否大于服务器返回的总页数.
       // 若大于总页数,自动返回最后一页数据
@@ -459,12 +458,8 @@
                 data.pageNo = 1;
                 break;
               }
-              // // 遍历所有tab,设置基本类名
-              // for(var i = 0,length = children(coursetab).length;i<length;i++){
-              //   children(coursetab)[i].className = "";
-              // }
-              // // 当前tab设置'z-sel'
-              // target.className = "z-sel"
+          
+              // 2个tab在'z-sel'和''切换
               if(!$(e.target).hasClass('z-sel')){
                 $coursetab.children().toggleClass('z-sel')
               }
@@ -484,14 +479,10 @@
 
             $pageindex.text(i+1) ;
 
-            // this.pager.insertBefore(pageindex,children(this.pager)[i+2]);
-
             $pageindex.insertBefore(this.pager.children().eq(i+2))
           }
         }else if(this.pagecount.length > this.totalPage){ //页面总页码数大于从服务器获取的总页码数时
           for(var i = this.totalPage;i<this.pagecount.length;i++){
-
-            // this.pager.removeChild(children(this.pager)[i+2]);
 
             this.pager.children().eq(i+2).remove();
             
@@ -544,44 +535,21 @@
     // 设置课程样式
     setcourse:function(i){
 
-      // children(children(this.container)[i])[0].src = this.list[i].smallPhotoUrl;
-      // 
       this.container.children().eq(i).find('img').attr('src',this.list[i].smallPhotoUrl)
 
-      // children(this.container)[i].querySelector(".cttl").innerText = this.list[i].name;
-      // 
       this.container.children().eq(i).find('.cttl').text(this.list[i].name)
 
-      // children(this.container)[i].querySelector(".lcount").innerText = this.list[i].learnerCount;
-      // 
       this.container.children().eq(i).find('.lcount').text(this.list[i].learnerCount)
     },
     // 滚动排行榜
     scroll:function(){
 
-      // if(this._mt == -1400){
-
-      //   this._mt = 0;
-      //   // 归位
-      //   this.container.style.cssText = "";
-      //   // 通过获取位置属性来清除浏览器对样式的缓存
-      //   // 代码来源:https://segmentfault.com/q/1010000008720117,我自己的提问.
-      //   this.container.offsetHeight;
-      // }
-
-      // this._mt += -70;
-
-      // var str = "margin-top:"+this._mt +"px;" + "transition-property:margin-top;transition-duration:1s;transition-timing-function:linear";
-      
-      // this.container.style.cssText = str;
-
       if(this.container.css('marginTop') == '-1400px'){
+
         this.container.css('marginTop','0px')
       }
 
       this.container.animate({marginTop:'-=70px'},1000)
-
-      
     },
     // 滚动
     start:function(){
@@ -605,14 +573,6 @@
       this.supcontainer.on("mouseover",this.stop.bind(this))
 
       this.supcontainer.on("mouseout",this.start.bind(this))
-      // 对页面进行侦测,若处于'后台'状态,不进行滚动
-      // document.on("visibilitychange",function(){
-      //   if(document.hidden){
-      //     this.stop();
-      //   }else{
-      //     this.start();
-      //   }
-      // }.bind(this))
     }
 
   })
