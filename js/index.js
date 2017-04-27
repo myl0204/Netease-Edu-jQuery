@@ -1,4 +1,4 @@
-// (function(){
+(function(){
   function get (url,options,callback){
     $.get(url,$.param(options),function(data){
       callback(JSON.parse(data))
@@ -26,33 +26,28 @@
   function Follow(){
   	this.container = $(templateFo);
 
-  	this._appendtohtml();
+  	this.follow = this.container.find('#follow')
 
-  	this.follow = $('.u-follow #follow')
-
-  	this.followed = $('.u-follow .followed')
+  	this.followed = this.container.find('.followed')
     // 取消关注按钮
-    this.unfollow = $('.followed .unfollow')
+    this.unfollow = this.container.find('.unfollow')
     // 关注人数
-    this.fcount = $('.u-follow .fancount')
+    this.fcount = this.container.find('.fancount')
 
   	this._initEvent();
   }
 
   extend(Follow.prototype,{
-  	_appendtohtml:function(){
-  		this.container.insertAfter(".title")
-  	},
   	status_switch:function(){
       var f_val = Number(this.fcount.text());
 
-      $('#follow').is(':hidden')? this.fcount.text(f_val - 1) : this.fcount.text(f_val + 1)
+      this.follow.is(':hidden')? this.fcount.text(f_val - 1) : this.fcount.text(f_val + 1)
 
   		this.follow.toggle();
   		this.followed.toggle();
   	},
   	_initEvent:function(){
-  		var _this = this
+  		this.container.insertAfter(".title")
   		//判断是否登录以及关注,若都满足,设置成'已关注'状态
   		 if(document.cookie.indexOf("loginSuc=") != -1){
         if(document.cookie.indexOf("followSuc=") != -1){
@@ -70,7 +65,7 @@
           login = new Login();
         }else{
           var url = "http://study.163.com/webDev/attention.htm";
-          $.get(url,"",function(data){
+          get(url,"",function(data){
             try{
               if(data==1){
                 document.cookie = "followSuc=1";
@@ -144,7 +139,7 @@
     _initEvent:function(){
       this.show();
       // 登录事件
-      this.form.bind("submit",function(e){
+      this.form.on("submit",function(e){
         e.preventDefault();
         // 加密
         var account = hex_md5(this.form[0].account.value),
@@ -249,13 +244,13 @@
 
       this.pointes.eq(this.pageindex-1).addClass('z-crt');
       // 添加'圆点'点击事件,采用事件代理
-      this.pointer.bind("click",function(e){
-        if(e.target.tagName=="I"){
+      this.pointer.on("click",'i',function(e){
+        // if(e.target.tagName=="I"){
           this.stop();
           this.pageindex = e.target.dataset.index - 1;
           this.change();
           this.start();
-        }
+        // }
       }.bind(this));
 
       // 鼠标移入,停止轮播.
@@ -303,7 +298,7 @@
     // 主容器
     this.container = $(".m-courselist");
     // 当前页课程数
-    this.coursecount = this.container.bind(".u-course");
+    this.coursecount = this.container[0].getElementsByClassName('u-course')
     // 页码器
     this.pager = $('.m-page')
     // 页数,jQuery选择器不是动态的,所以这里用原生的。
@@ -345,10 +340,10 @@
     },
     // 页码点击执行函数
     pmove:function(event){
-      event = event || window.event;
+      // event = event || window.event;
       this.msg.text('');
-      if(event.target.tagName == "LI"){
-        var index = event.target.dataset.index,
+      // if(event.target.tagName == "LI"){
+        var index = $(event.target).data('index')
             pageNo = data.pageNo;
 
         // -1为上一页,0为下一页
@@ -389,11 +384,15 @@
               })
             }
         }
-      }
+      // }
     },
 
     // 初始化事件,根据现有的课程数和获取到的课程数来增删/设置课程
     _initEvent:function(){
+      // 对页码器进行事件代理,执行跳转,因为每次翻页都会重新new一个Course
+      // 会重复监听注册,故先取消,这样的pmove中的this.totalPage才会指向当前的this
+      this.pager.unbind('<click></click>')
+      this.pager.on('click','li',this.pmove.bind(this))
       // 判断请求的页码数是否大于服务器返回的总页数.
       // 若大于总页数,自动返回最后一页数据
       // 经测试,'错误'的页码数还是会返回totalPage和totalCount
@@ -406,6 +405,7 @@
         var clength = this.coursecount.length,//当前页面的课程数量
             llength = this.list.length;//从服务器获取到的指定页面课程数量
         if(clength == 0){
+
           for(var i = 0,length=llength;i<length;i++){
             this.addcourse(i);
           }
@@ -415,7 +415,7 @@
           }
         }else if(clength>llength){
           for(var i = 0,length=clength - llength;i<length;i++){
-            this.container.removeChild(children(this.container)[0])
+            this.container.children().eq(i).remove()
           }
           for(var i=0,length=llength;i<length;i++){
             this.setcourse(i)
@@ -440,14 +440,14 @@
 
             $pageindex.text(i+1);
 
-            $pageindex.insertBefore($('.icn .right'));
+            $pageindex.insertBefore($('.icn.right'));
           }
          
           // 注册tab的点击事件,采用事件代理
           var $coursetab = $('.u-tab');
-          $coursetab.bind("click",function(e){
+          $coursetab.on("click",'li',function(e){
 
-            if(e.target.tagName == "LI"){
+            // if(e.target.tagName == "LI"){
               switch(e.target.dataset.type){
                 case '10':
                 data.type = 10;
@@ -465,35 +465,39 @@
               // }
               // // 当前tab设置'z-sel'
               // target.className = "z-sel"
-              $coursetab.children().toggleClass('z-sel')
+              if(!$(e.target).hasClass('z-sel')){
+                $coursetab.children().toggleClass('z-sel')
+              }
               get(url,data,function(obj){
                 course = new Course(obj)
               })
-            }
+            // }
           })
         }else if (this.pagecount.length < this.totalPage){ // 页面总页码数小于从服务器获取的总页码数时
           for(var i = this.pagecount.length ; i<this.totalPage;i++){
 
-            var pageindex = document.createElement("li");
+            var $pageindex = $('<li class=\'pageindex\'></li>');
 
-            pageindex.className = "pageindex";
+            $pageindex.addClass("pageindex");
 
-            pageindex.setAttribute("data-index",i+1);
+            $pageindex.data("index",i+1);
 
-            pageindex.innerHTML = i+1 ;
+            $pageindex.text(i+1) ;
 
-            this.pager.insertBefore(pageindex,children(this.pager)[i+2]);
+            // this.pager.insertBefore(pageindex,children(this.pager)[i+2]);
+
+            $pageindex.insertBefore(this.pager.children().eq(i+2))
           }
         }else if(this.pagecount.length > this.totalPage){ //页面总页码数大于从服务器获取的总页码数时
           for(var i = this.totalPage;i<this.pagecount.length;i++){
 
-            this.pager.removeChild(children(this.pager)[i+2]);
+            // this.pager.removeChild(children(this.pager)[i+2]);
+
+            this.pager.children().eq(i+2).remove();
             
           }
         }
-        // 对页码器进行事件代理,执行跳转
-        // addEvent(this.pager,"click",this.pmove.bind(this));
-        this.pager.onclick = this.pmove.bind(this);
+
         // 设置页码状态
         for(i=0;i<this.totalPage;i++){
         (i+1) == data.pageNo ? this.pagecount[i].className = "pageindex z-sel" : this.pagecount[i].className = "pageindex";
@@ -501,6 +505,252 @@
       }      
     }
   })
+  
+  // 热门课程模块
+  var templateHotC = "<li class='u-hot f-cb'>\
+                      <img width='50px' height='50px'>\
+                      <div>\
+                        <div class='cttl'></div>\
+                        <div class='lcount icn'></div>\
+                      </div>\
+                    </li>";
 
-  window.Follow = Follow
-// })()
+  function Hotcourse(options){
+    options = options || {};
+    // 将返回的数组放入list中,再放入Hotcourse
+    this.list = [];
+
+    extend(this.list,options);
+
+    this.container = $('.hot').children()
+
+    this.supcontainer = this.container.parent();
+
+    this._mt = 0;
+
+    this._initEvent();
+
+  }
+
+  extend(Hotcourse.prototype,{
+    //增加课程
+    addcourse:function(i){
+
+    this.container.append($(templateHotC));
+
+    this.setcourse(i);
+
+    },
+    // 设置课程样式
+    setcourse:function(i){
+
+      // children(children(this.container)[i])[0].src = this.list[i].smallPhotoUrl;
+      // 
+      this.container.children().eq(i).find('img').attr('src',this.list[i].smallPhotoUrl)
+
+      // children(this.container)[i].querySelector(".cttl").innerText = this.list[i].name;
+      // 
+      this.container.children().eq(i).find('.cttl').text(this.list[i].name)
+
+      // children(this.container)[i].querySelector(".lcount").innerText = this.list[i].learnerCount;
+      // 
+      this.container.children().eq(i).find('.lcount').text(this.list[i].learnerCount)
+    },
+    // 滚动排行榜
+    scroll:function(){
+
+      // if(this._mt == -1400){
+
+      //   this._mt = 0;
+      //   // 归位
+      //   this.container.style.cssText = "";
+      //   // 通过获取位置属性来清除浏览器对样式的缓存
+      //   // 代码来源:https://segmentfault.com/q/1010000008720117,我自己的提问.
+      //   this.container.offsetHeight;
+      // }
+
+      // this._mt += -70;
+
+      // var str = "margin-top:"+this._mt +"px;" + "transition-property:margin-top;transition-duration:1s;transition-timing-function:linear";
+      
+      // this.container.style.cssText = str;
+
+      if(this.container.css('marginTop') == '-1400px'){
+        this.container.css('marginTop','0px')
+      }
+
+      this.container.animate({marginTop:'-=70px'},1000)
+
+      
+    },
+    // 滚动
+    start:function(){
+      this.timer = setInterval(this.scroll.bind(this),5000)
+    },
+    // 停止
+    stop:function(){
+      clearInterval(this.timer);
+    },
+    // 初始化事件
+    _initEvent:function(){
+      // 调用Course的addcourse函数
+      for(var i = 0,length=this.list.length;i<length;i++){
+        this.addcourse(i)
+      }
+      // 克隆一个节点,用于后期滚动
+      this.supcontainer.append(this.container.clone(true));
+      // 开始滚动
+      this.start();
+
+      this.supcontainer.on("mouseover",this.stop.bind(this))
+
+      this.supcontainer.on("mouseout",this.start.bind(this))
+      // 对页面进行侦测,若处于'后台'状态,不进行滚动
+      // document.on("visibilitychange",function(){
+      //   if(document.hidden){
+      //     this.stop();
+      //   }else{
+      //     this.start();
+      //   }
+      // }.bind(this))
+    }
+
+  })
+
+  // video Modal 视频弹窗
+  var templateVModal = 
+  "<div class='m-modal'>\
+    <div class='align'></div>\
+    <div class='vct'>\
+      <div class='zttl'>遇见更好的自己</div>\
+      <div class='zcls icn'></div>\
+      <div class='u-playbtn'></div>\
+      <video src='http://mov.bn.netease.com/open-movie/nos/mp4/2014/12/30/SADQ86F5S_shd.mp4'  width='960px'></video>\
+      <div>\
+  </div>";
+
+  function VModal(){
+
+    this.container = $(templateVModal)
+
+    this.mask = $('<div class=\'f-mask\'></div>')
+
+    this.cls = this.container.find(".zcls");
+
+    this.playbtn = this.container.find(".u-playbtn");
+    // video本体
+    this.vcontent = this.container[0].getElementsByTagName("video")[0];
+
+    this._initEvent();
+  }
+
+  extend(VModal.prototype,{
+
+    show:function(){
+      $('body').append(this.container);
+
+      $('body').append(this.mask);
+    },
+
+    hide:function(){
+      this.container.remove()
+
+      this.mask.remove()
+    },
+
+    play:function(){
+      this.vcontent.play();
+      this.playbtn.toggle()
+    },
+
+    pause:function(){
+      this.vcontent.pause();
+      this.playbtn.toggle()
+    },
+
+    judge:function(){
+      if(this.vcontent.paused){
+        this.play()
+      }else {this.pause()}
+    },
+
+    _initEvent:function(){
+
+      this.cls.on("click",this.hide.bind(this));
+      // 点击视频外,关闭视频
+      this.container.on("click",function(e){
+        if(e.target.className == "m-modal"){
+          this.hide();
+        }
+      }.bind(this));
+      // 点击视频实现播放/暂停
+      this.vcontent.addEventListener("click",this.judge.bind(this));
+
+      this.show();
+
+      this.play();
+    }
+  })
+  
+  // 暴露接口
+  window.Follow = Follow;
+  window.Login = Login;
+  window.Slider = Slider;
+  window.Course = Course;
+  window.Hotcourse = Hotcourse;
+  window.VModal = VModal;
+
+  var winWidth = window.innerWidth,
+      flag = 1,
+      url = "https://study.163.com/webDev/couresByCategory.htm",
+      data = {pageNo:1,psize:20,type:10},
+      hoturl = "https://study.163.com/webDev/hotcouresByCategory.htm";
+
+  // 若窗口宽度小于1205px,每页放15个
+  if(winWidth < 1205){
+    data.psize = 15;
+    flag =0;
+  }
+  //函数节流
+  function throttle(method,context){
+            clearTimeout(method.tId);
+            method.tId=setTimeout(function(){
+                method.call(context);
+            },500);
+        }
+  // 检测窗口函数,实时改变布局
+  function changewindow(){
+    if(window.innerWidth < 1205  && flag ==1){
+      flag = 0;
+
+      data.psize = 15;
+
+      course.msg.innerText = "";
+
+      get(url,data,function(obj){
+      course = new Course(obj);
+      });
+    }else if(window.innerWidth >=1206 && flag ==0){
+      flag = 1;
+
+      data.psize = 20;
+
+      course.msg.innerText = "";
+
+      get(url,data,function(obj){
+      course = new Course(obj);
+      });
+    }
+  }
+  window.onresize = function(){
+    throttle(changewindow,window)
+  }
+  // 获取课程数据
+  get(url,data,function(obj){
+    course = new Course(obj);
+  });
+  // 获取榜单数据
+  get(hoturl,"",function(arr){
+    hotcourse = new Hotcourse(arr);
+  })
+})()

@@ -127,6 +127,18 @@
 	</div>
 	<script type="text/javascript" src="js/index.js"></script>
 	<script type="text/javascript">
+		function iftip(){
+		  if(document.cookie.indexOf("tipcancel=1") != -1){
+		  	document.querySelector(".g-wrap").style.display = "none";
+		  }
+		}
+		
+		document.querySelector(".cancel").addEventListener("click",function(){
+	  	document.cookie = "tipcancel=1";
+	  	iftip();
+	  });
+		
+		iftip();
 		var follow = new Follow();
 		var slider = new Slider({
 			container:$('#m-slider-container'),
@@ -141,17 +153,10 @@
 
 			pageindex:1
 		});
-		var winWidth = window.innerWidth,
-	      	flag = 1,
-	      	url = "https://study.163.com/webDev/couresByCategory.htm",
-	      	data = {pageNo:1,psize:20,type:10},
-	      	hoturl = "https://study.163.com/webDev/hotcouresByCategory.htm";
-		// $.get(url,$.param(data),function(obj){
-		// 	course = new Course(obj)
-		// })
-		get(url,data,function(obj){
-			course = new Course(obj)
-		})
+
+		document.querySelector(".u-intro").addEventListener("click",function(){
+  		mvideo = new VModal();
+ 		})
 	</script>
 </body>
 </html>
